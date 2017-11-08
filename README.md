@@ -7,9 +7,11 @@ Android Services
 	
 
 Services and Background Processing
+
 	- By Default, A service runs in the same proess as the main thread of the application. 
 
 Platform service and Custom service
+
 	- The Android platform provides and runs predefined system services and every Android application can use them, given the right permission. 
 
- 
+
