@@ -1,5 +1,10 @@
 package com.example.abhishek.service_example;
 
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,45 +13,60 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.example.abhishek.service_example.services.DownloadService;
+
+import org.w3c.dom.Text;
+
+public class MainActivity extends Activity {
+
+    private TextView textView;
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                String string = bundle.getString(DownloadService.FILEPATH);
+                int resultCode = bundle.getInt(DownloadService.RESULT);
+                if (resultCode == RESULT_OK) {
+                    Toast.makeText(MainActivity.this, "Download Complete. Download URI:" + string, Toast.LENGTH_SHORT).show();
+                    textView.setText("Download failed");
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        textView = (TextView) findViewById(R.id.status);
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    protected void onResume()
+    {
+        super.onResume();
+        registerReceiver(receiver,new IntentFilter(DownloadService.NOTIFICATION));
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    protected void onPause()
+    {
+        super.onPause();
+        unregisterReceiver(receiver);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+    }
 
-        return super.onOptionsItemSelected(item);
+    public void onClick(View view)
+    {
+        Intent intent = new Intent(this, DownloadService.class);
+        intent.putExtra(DownloadService.FILENAME,"index.html");
+        intent.putExtra(DownloadService.URL,"http://www.google.com");
+        startService(intent);
+        textView.setText("Service Started");
+
     }
 }
